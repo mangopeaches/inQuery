@@ -13,6 +13,11 @@ use InQuery\Exceptions\DependencyException;
 abstract class BaseDriver implements Driver
 {
     /**
+     * Define class constants.
+     */
+    const NAME = 'base';
+
+    /**
      * Database host.
      * @var string
      */
@@ -75,7 +80,7 @@ abstract class BaseDriver implements Driver
      * @param int $limit (optional) number of rows to return
      * @throws DatabaseConnectionException
      * @throws DatabaseException
-     * @throws DependencyException;
+     * @throws DependencyException
      * @return TBD
      */
     public function find(array $conditions = [], array $fields = [], array $order = [], array $options = [], $offset = Driver::OFFSET_DEFAULT, $limit = Driver::RETURNED_ROW_DEFAULT)

@@ -8,7 +8,7 @@ use InQuery\Driver;
  * Connection class controls the database driver for the respective engine.
  * @author Thomas Breese <thomasjbreese@gmail.com>
  */
-class Connection
+class Connection implements Driver
 {
     /**
      * Name for the driver.
@@ -46,7 +46,7 @@ class Connection
         $availableDrivers = scandir(__DIR__ . '/Drivers');
         foreach ($availableDrivers as $driverFile) {
             if (strstr($driverFile, 'Driver.php') !== false &&
-                constant('InQuery\\Drivers\\' . str_replace('.php', '', $driverFile), '::NAME') === $type
+                constant('InQuery\\Drivers\\' . str_replace('.php', '', $driverFile) . '::NAME') === $type
             ) {
                 $driver = 'InQuery\\Drivers\\' . str_replace('.php', '', $driverFile);
                 break;    
@@ -78,15 +78,30 @@ class Connection
     }
 
     /**
-     * Establishes a database connection.
-     * @return bool whether we established a connection successfully
-     * @throws DatabaseConnectException
+     * Established a connection to the database.
+     * @throws DatabaseConnectionException
+     * @throws DatabaseException
+     * @throws DependencyException
      */
     public function connect()
     {
-        if (!$this->connected) {
-            return $this->driver->connect();
-        }
-        return true;
+        $this->driver->connect();
+    }
+
+    /**
+     * Queries for records from the database.
+     * @param array $conditions (optional) array of query conditions
+     * @param array $fields (optional) fields to return, all if omittied
+     * @param array $order (optional) fields to order by
+     * @param array $options (optional) options to be passed through as query params
+     * @param int $offset (optional) rows to skip
+     * @param int $limit (optional) number of rows to return
+     * @return TBD
+     * @throws DatabaseConnectionException
+     * @throws DatabaseException
+     */
+    public function find(array $conditions = [], array $fields = [], array $order = [], array $options = [], $offset = self::OFFSET_DEFAULT, $limit = self::RETURNED_ROW_DEFAULT)
+    {
+        $this->driver->find($conditions, $fields, $order, $options, $offset, $limit);
     }
 }

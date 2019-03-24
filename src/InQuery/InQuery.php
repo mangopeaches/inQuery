@@ -3,6 +3,7 @@ namespace InQuery;
 
 use InQuery\Exceptions\InvalidParamsException;
 use InQuery\Exceptions\SetupException;
+use InQuery\Exceptions\InvalidConnectionException;
 use InQuery\Connection;
 
 /**
@@ -35,15 +36,20 @@ final class InQuery
             throw new InvalidParamsException('Invalid connection parameters supplied to init function.', InvalidParamsException::INIT_PARAMS_INVALID);
         }
 
+        // if we just have a config array, convert to an array of arrays for simplicity
+        if (!isset($params[0])) {
+            $params = [$params];
+        }
+
         foreach ($params as $index => $paramSet) {
             if (empty($paramSet['driver']) || empty($paramSet['host']) || empty($paramSet['db'])) {
                 throw new InvalidParamsException('You must supply at lease a \'driver\', \'host\', and \'db\' for each connection.', InvalidParamsException::INIT_PARAMS_INVALID);
             }
-            $name = isset($paramsSet['name']) ? $paramsSet['name'] : $index;
+            $name = isset($paramSet['name']) ? $paramSet['name'] : $index;
             $port = isset($paramSet['port']) ? $paramSet['port'] : 0;
             $username = isset($paramSet['username']) ? $paramSet['username'] : '';
             $password = isset($paramSet['password']) ? $paramSet['password'] : '';
-            if (isset($paramsSet['default']) && $paramsSet['default'] === true) {
+            if (isset($paramSet['default']) && $paramSet['default'] === true) {
                 array_unshift($this->conns, new Connection($name, $paramSet['driver'], $paramSet['host'], $paramSet['db'], $port, $username, $password));
             } else {
                 array_push($this->conns, new Connection($name, $paramSet['driver'], $paramSet['host'], $paramSet['db'], $port, $username, $password));
@@ -79,28 +85,28 @@ final class InQuery
     }
 
     /**
-     * Returns instance of the default driver.
-     * @return Driver
+     * Returns instance of the connection.
+     * @return Connection
      */
-    public function getDriver()
+    public function getConnection()
     {
-        return $this->conn[0]->getDriver();
+        return $this->conns[0];
     }
 
     /**
      * Handle attempts to access a database connection by name.
      * @param string $name connection name
-     * @return Driver
+     * @return Connection
      * @throws InvalidConnectionException when name not found
      */
     public function __get($name)
     {
-        if (ctype_digit($name) && count($this->conn) >= $name) {
-            return $this->conn[(int)$name]->getDriver();
+        if (ctype_digit($name) && count($this->conns) >= $name) {
+            return $this->conns[(int)$name];
         }
-        foreach ($this->conn as $connection) {
+        foreach ($this->conns as $connection) {
             if ($connection->getName() === $name) {
-                return $connection->getDriver();
+                return $connection;
             }
         }
         throw new InvalidConnectionException('Connection ' . $name . ' was not found in connection set.', InvalidConnectionException::INVALID_CONNECTION);
