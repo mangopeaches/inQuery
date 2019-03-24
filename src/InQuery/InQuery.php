@@ -79,6 +79,15 @@ final class InQuery
     }
 
     /**
+     * Returns instance of the default driver.
+     * @return Driver
+     */
+    public function getDriver()
+    {
+        return $this->conn[0]->getDriver();
+    }
+
+    /**
      * Handle attempts to access a database connection by name.
      * @param string $name connection name
      * @return Driver
@@ -87,7 +96,7 @@ final class InQuery
     public function __get($name)
     {
         if (ctype_digit($name) && count($this->conn) >= $name) {
-            return $this->conn[$name]->getDriver();
+            return $this->conn[(int)$name]->getDriver();
         }
         foreach ($this->conn as $connection) {
             if ($connection->getName() === $name) {

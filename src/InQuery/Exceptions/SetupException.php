@@ -1,7 +1,7 @@
 <?php
 namespace InQuery\Exceptions;
 
-use Inquery\Exceptions\BaseException;
+use InQuery\Exceptions\BaseException;
 
 /**
  * Exception for when app is accessed before being initialized.

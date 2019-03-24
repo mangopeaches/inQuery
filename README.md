@@ -5,7 +5,7 @@ Straightforward PHP Database Driver
 
 The first thing you need to do is provide your connection parameters.
 
-To do so, simple instantiate a new instance with your connection parameters, like such:\
+To do so, simple instantiate a new instance with your connection parameters, like such:
 ```php
 $db = InQuery\InQuery::init([
     'name' => 'default',
@@ -19,7 +19,7 @@ $db = InQuery\InQuery::init([
 ```
 
 Or you can establish multiple connections at once:\
-*Note*: When you supply multiple connections, you _should_ supply a 'default' element to indicate which connection you want to use as the default when one is not explicitly specified.\
+*Note*: When you supply multiple connections, you _should_ supply a 'default' element to indicate which connection you want to use as the default when one is not explicitly specified.
 ```php
 $db = InQuery\InQuery::init([
     [
@@ -44,3 +44,21 @@ $db = InQuery\InQuery::init([
     ]
 ])
 ```
+
+## Get and instance of the db driver
+
+Once you have established a connection you can get an instance of your database drivers in two way.
+
+## Default driver
+
+This will return your default driver, or if you only have one driver defined, your only driver.
+
+```php
+$driver = InQuery\InQuery::getInstance()->getDriver();
+```
+
+This would return the driver for connection named 'db2' in the above example with 2 drivers.
+```php
+$db2Driver = InQuery\InQuery::getInstance()->db2;
+```
+

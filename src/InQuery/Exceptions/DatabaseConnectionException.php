@@ -1,7 +1,7 @@
 <?php
 namespace InQuery\Exceptions;
 
-use Inquery\Exceptions\BaseException;
+use InQuery\Exceptions\BaseException;
 
 /**
  * Exception for when we cannot establish a connection to the database.
