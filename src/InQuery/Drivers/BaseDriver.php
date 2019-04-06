@@ -2,9 +2,6 @@
 namespace InQuery\Drivers;
 
 use InQuery\Driver;
-use InQuery\Exceptions\DatabaseConnectionException;
-use InQuery\Exceptions\DatabaseException;
-use InQuery\Exceptions\DependencyException;
 
 /**
  * Base database driver.
@@ -71,22 +68,11 @@ abstract class BaseDriver implements Driver
     }
 
     /**
-     * Queries for records from the database.
-     * @param array $conditions (optional) array of query conditions
-     * @param array $fields (optional) fields to return, all if omittied
-     * @param array $order (optional) fields to order by
-     * @param array $options (optional) options to be passed through as query params
-     * @param int $offset (optional) rows to skip
-     * @param int $limit (optional) number of rows to return
-     * @throws DatabaseConnectionException
-     * @throws DatabaseException
-     * @throws DependencyException
-     * @return TBD
+     * Returns connection instance.
+     * @return Resource
      */
-    public function find(array $conditions = [], array $fields = [], array $order = [], array $options = [], $offset = Driver::OFFSET_DEFAULT, $limit = Driver::RETURNED_ROW_DEFAULT)
+    public function getConnection()
     {
-        if ($this->connection === null) {
-            $this->connect();
-        }
+        return $this->connection;
     }
 }

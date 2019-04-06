@@ -4,7 +4,7 @@ namespace InQuery;
 use InQuery\Exceptions\InvalidParamsException;
 use InQuery\Exceptions\SetupException;
 use InQuery\Exceptions\InvalidConnectionException;
-use InQuery\Connection;
+use InQuery\Engine;
 
 /**
  * Container class for the application.
@@ -20,7 +20,7 @@ final class InQuery
 
     /**
      * DB connections.
-     * @var Connection[]
+     * @var Engine[]
      */
     private $conns = [];
 
@@ -42,18 +42,19 @@ final class InQuery
         }
 
         foreach ($params as $index => $paramSet) {
-            if (empty($paramSet['driver']) || empty($paramSet['host']) || empty($paramSet['db'])) {
-                throw new InvalidParamsException('You must supply at lease a \'driver\', \'host\', and \'db\' for each connection.', InvalidParamsException::INIT_PARAMS_INVALID);
+            if (empty($paramSet['engine']) || empty($paramSet['host']) || empty($paramSet['db'])) {
+                throw new InvalidParamsException('You must supply an \'engine\', \'host\', and \'db\' for each connection.', InvalidParamsException::INIT_PARAMS_INVALID);
             }
             $name = isset($paramSet['name']) ? $paramSet['name'] : $index;
             $port = isset($paramSet['port']) ? $paramSet['port'] : 0;
             $username = isset($paramSet['username']) ? $paramSet['username'] : '';
             $password = isset($paramSet['password']) ? $paramSet['password'] : '';
-            if (isset($paramSet['default']) && $paramSet['default'] === true) {
-                array_unshift($this->conns, new Connection($name, $paramSet['driver'], $paramSet['host'], $paramSet['db'], $port, $username, $password));
-            } else {
-                array_push($this->conns, new Connection($name, $paramSet['driver'], $paramSet['host'], $paramSet['db'], $port, $username, $password));
-            }
+            $default = isset($paramSet['default']) && $paramSet['default'] === true;
+            $this->conns[] = [
+                'name' => $name,
+                'default' => $default,
+                'engine' => Engine::create($paramSet['engine'], $paramSet['host'], $paramSet['db'], $port, $username, $password)
+            ];
         }
     }
 
@@ -86,27 +87,30 @@ final class InQuery
 
     /**
      * Returns instance of the connection.
-     * @return Connection
+     * @return Engine
      */
     public function getConnection()
     {
-        return $this->conns[0];
+        // return the default if one is set, otherwise default to first in the set    
+        foreach ($this->conns as $conn) {
+            if ($conn['default'] === true) {
+                return $conn['engine'];
+            }
+        }
+        return $this->conns[0]['engine'];
     }
 
     /**
      * Handle attempts to access a database connection by name.
      * @param string $name connection name
-     * @return Connection
+     * @return Engine
      * @throws InvalidConnectionException when name not found
      */
     public function __get($name)
     {
-        if (ctype_digit($name) && count($this->conns) >= $name) {
-            return $this->conns[(int)$name];
-        }
-        foreach ($this->conns as $connection) {
-            if ($connection->getName() === $name) {
-                return $connection;
+        foreach ($this->conns as $conn) {
+            if ($conn['name'] == $name) {
+                return $conn['engine'];
             }
         }
         throw new InvalidConnectionException('Connection ' . $name . ' was not found in connection set.', InvalidConnectionException::INVALID_CONNECTION);

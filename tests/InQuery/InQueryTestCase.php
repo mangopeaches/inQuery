@@ -4,8 +4,11 @@ use PHPUnit\Framework\TestCase;
 use InQuery\InQuery;
 use InQuery\Exceptions\SetupException;
 use InQuery\Exceptions\InvalidParamsException;
+use InQuery\Engine;
+use InQuery\QueryResults\MockQueryResult;
 use InQuery\Drivers\MockDriver;
-use InQuery\Connection;
+use InQuery\Commands\MockCommand;
+use InQuery\Command;
 
 /**
  * Test cases for InQuery class.
@@ -54,7 +57,7 @@ class InQueryTestCase extends TestCase
     {
         $this->expectException(InvalidParamsException::class);
         InQuery::init([
-            'driver' => 'asdf',
+            'engine' => 'asdf',
             'db' => 'sdsds'
         ]);
     }
@@ -66,7 +69,7 @@ class InQueryTestCase extends TestCase
     {
         $this->expectException(InvalidParamsException::class);
         InQuery::init([
-            'driver' => 'asdf',
+            'engine' => 'asdf',
             'host' => 'sdsds'
         ]);
     }
@@ -86,7 +89,7 @@ class InQueryTestCase extends TestCase
     public function testValidParams()
     {
         $db = InQuery::init([
-            'driver' => MockDriver::NAME,
+            'engine' => Engine::MOCK,
             'host' => 'localhost',
             'port' => '3306',
             'db' => 'mock',
@@ -102,7 +105,7 @@ class InQueryTestCase extends TestCase
     public function testGetConnection()
     {
         $db = InQuery::init([
-            'driver' => MockDriver::NAME,
+            'engine' => Engine::MOCK,
             'host' => 'localhost',
             'port' => '3306',
             'db' => 'mock',
@@ -110,27 +113,7 @@ class InQueryTestCase extends TestCase
             'password' => 'password'
         ]);
         $conn = $db::getInstance()->getConnection();
-        $this->assertTrue($conn instanceof Connection);
-        $this->assertTrue($conn->getName() === 0);
-    }
-
-    /**
-     * Tests getConnection() with name.
-     */
-    public function testGetConnectionWithName()
-    {
-        $db = InQuery::init([
-            'driver' => MockDriver::NAME,
-            'name' => 'testConn',
-            'host' => 'localhost',
-            'port' => '3306',
-            'db' => 'mock',
-            'username' => 'username',
-            'password' => 'password'
-        ]);
-        $conn = $db::getInstance()->getConnection();
-        $this->assertTrue($conn instanceof Connection);
-        $this->assertTrue($conn->getName() === 'testConn');
+        $this->assertTrue($conn instanceof Engine);
     }
 
     /**
@@ -140,7 +123,7 @@ class InQueryTestCase extends TestCase
     {
         $db = InQuery::init([
             [
-                'driver' => MockDriver::NAME,
+                'engine' => Engine::MOCK,
                 'host' => 'localhost',
                 'port' => '3306',
                 'db' => 'mock',
@@ -148,7 +131,7 @@ class InQueryTestCase extends TestCase
                 'password' => 'password'
             ],
             [
-                'driver' => MockDriver::NAME,
+                'engine' => Engine::MOCK,
                 'host' => 'localhost2',
                 'port' => '3306',
                 'db' => 'mock2',
@@ -166,7 +149,7 @@ class InQueryTestCase extends TestCase
     {
         $db = InQuery::init([
             [
-                'driver' => MockDriver::NAME,
+                'engine' => Engine::MOCK,
                 'host' => 'localhost',
                 'port' => '3306',
                 'db' => 'mock',
@@ -174,7 +157,7 @@ class InQueryTestCase extends TestCase
                 'password' => 'password'
             ],
             [
-                'driver' => MockDriver::NAME,
+                'engine' => Engine::MOCK,
                 'host' => 'localhost2',
                 'port' => '3306',
                 'db' => 'mock2',
@@ -182,10 +165,8 @@ class InQueryTestCase extends TestCase
                 'password' => 'password'
             ]
         ]);
-        $this->assertTrue($db->{0} instanceof Connection);
-        $this->assertTrue($db->{1} instanceof Connection);
-        $this->assertTrue($db->{0}->getName() === 0);
-        $this->assertTrue($db->{1}->getName() === 1);
+        $this->assertTrue($db->{0} instanceof Engine);
+        $this->assertTrue($db->{1} instanceof Engine);
     }
 
     /**
@@ -195,7 +176,7 @@ class InQueryTestCase extends TestCase
     {
         $db = InQuery::init([
             [
-                'driver' => MockDriver::NAME,
+                'engine' => Engine::MOCK,
                 'host' => 'localhost',
                 'port' => '3306',
                 'db' => 'mock',
@@ -204,7 +185,7 @@ class InQueryTestCase extends TestCase
             ],
             [
                 'default' => true,
-                'driver' => MockDriver::NAME,
+                'engine' => Engine::MOCK,
                 'host' => 'localhost2',
                 'port' => '3306',
                 'db' => 'mock2',
@@ -212,8 +193,8 @@ class InQueryTestCase extends TestCase
                 'password' => 'password'
             ]
         ]);
-        // it's by original index, so index 1 gets default position
-        $this->assertTrue($db->getConnection()->getName() === 1);
+        // assert that getting the default connection is the same as the one we have set as the default
+        $this->assertEquals($db->getConnection(), $db->{1});
     }
 
     /**
@@ -223,7 +204,7 @@ class InQueryTestCase extends TestCase
     {
         $db = InQuery::init([
             [
-                'driver' => MockDriver::NAME,
+                'engine' => Engine::MOCK,
                 'host' => 'localhost',
                 'port' => '3306',
                 'db' => 'mock',
@@ -231,7 +212,7 @@ class InQueryTestCase extends TestCase
                 'password' => 'password'
             ],
             [
-                'driver' => MockDriver::NAME,
+                'engine' => Engine::MOCK,
                 'host' => 'localhost2',
                 'port' => '3306',
                 'db' => 'mock2',
@@ -239,10 +220,8 @@ class InQueryTestCase extends TestCase
                 'password' => 'password'
             ]
         ]);
-        $this->assertTrue($db->{0} instanceof Connection);
-        $this->assertTrue($db->{1} instanceof Connection);
-        $this->assertTrue($db->{0}->getDriver() instanceof MockDriver);
-        $this->assertTrue($db->{1}->getDriver() instanceof MockDriver);
+        $this->assertTrue($db->{0} instanceof Engine);
+        $this->assertTrue($db->{1} instanceof Engine);
     }
 
     /**
@@ -252,7 +231,7 @@ class InQueryTestCase extends TestCase
     {
         $db = InQuery::init([
             [
-                'driver' => MockDriver::NAME,
+                'engine' => Engine::MOCK,
                 'name' => 'db1',
                 'host' => 'localhost',
                 'port' => '3306',
@@ -261,7 +240,7 @@ class InQueryTestCase extends TestCase
                 'password' => 'password'
             ],
             [
-                'driver' => MockDriver::NAME,
+                'engine' => Engine::MOCK,
                 'name' => 'db2',
                 'host' => 'localhost2',
                 'port' => '3306',
@@ -270,10 +249,8 @@ class InQueryTestCase extends TestCase
                 'password' => 'password'
             ]
         ]);
-        $this->assertTrue($db->db1 instanceof Connection);
-        $this->assertTrue($db->db2 instanceof Connection);
-        $this->assertTrue($db->db1->getName() === 'db1');
-        $this->assertTrue($db->db2->getName() === 'db2');
+        $this->assertTrue($db->db1 instanceof Engine);
+        $this->assertTrue($db->db2 instanceof Engine);
     }
 
     /**
@@ -284,7 +261,7 @@ class InQueryTestCase extends TestCase
         $db = InQuery::init([
             [
                 'name' => 'db1',
-                'driver' => MockDriver::NAME,
+                'engine' => Engine::MOCK,
                 'host' => 'localhost',
                 'port' => '3306',
                 'db' => 'mock',
@@ -294,7 +271,7 @@ class InQueryTestCase extends TestCase
             [
                 'default' => true,
                 'name' => 'db2',
-                'driver' => MockDriver::NAME,
+                'engine' => Engine::MOCK,
                 'host' => 'localhost2',
                 'port' => '3306',
                 'db' => 'mock2',
@@ -302,35 +279,44 @@ class InQueryTestCase extends TestCase
                 'password' => 'password'
             ]
         ]);
-        $this->assertTrue($db->getConnection()->getName() === 'db2');
+        $this->assertEquals($db->getConnection(), $db->db2);
     }
 
     /**
-     * Tests get each connection driver by name.
+     * Tests basic usage for the query builder's find() method without params.
      */
-    public function testValidMultipleParamSetsDriversWithName()
+    public function testQueryBuilderFindNoParams()
     {
         $db = InQuery::init([
-            [
-                'driver' => MockDriver::NAME,
-                'name' => 'db1',
-                'host' => 'localhost',
-                'port' => '3306',
-                'db' => 'mock',
-                'username' => 'username',
-                'password' => 'password'
-            ],
-            [
-                'driver' => MockDriver::NAME,
-                'name' => 'db2',
-                'host' => 'localhost2',
-                'port' => '3306',
-                'db' => 'mock2',
-                'username' => 'username',
-                'password' => 'password'
-            ]
-        ]);
-        $this->assertTrue($db->db1->getDriver() instanceof MockDriver);
-        $this->assertTrue($db->db2->getDriver() instanceof MockDriver);
+            'engine' => Engine::MOCK,
+            'name' => 'db1',
+            'host' => 'localhost',
+            'port' => '3306',
+            'db' => 'mock',
+            'username' => 'username',
+            'password' => 'password'
+        ])->getConnection();
+        $findQuery = $db->find('testTable');
+        $this->assertTrue($findQuery instanceof MockCommand);
+        $this->assertTrue($findQuery->getType() === Command::TYPE_FIND);
+    }
+
+    /**
+     * Tests basic usage for the execute method.
+     */
+    public function testDriverExecute()
+    {
+        $db = InQuery::init([
+            'engine' => Engine::MOCK,
+            'name' => 'db1',
+            'host' => 'localhost',
+            'port' => '3306',
+            'db' => 'mock',
+            'username' => 'username',
+            'password' => 'password'
+        ])->getConnection();
+        $findQuery = $db->find('testTable');
+        $result = $db->exec($findQuery);
+        $this->assertTrue($result instanceof MockQueryResult);
     }
 }

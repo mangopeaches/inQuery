@@ -12,7 +12,7 @@ To do so, simple instantiate a new instance with your connection parameters, lik
 ```php
 $db = InQuery\InQuery::init([
     'name' => 'default',
-    'driver' => InQuery\Driver::MONGO,
+    'engine' => InQuery\Engine::MONGO,
     'host' => 'localhost',
     'port' => '27017',
     'db' => 'example',
@@ -28,7 +28,7 @@ $db = InQuery\InQuery::init([
     [
         'default' => true,
         'name' => 'db1',
-        'driver' => InQuery\Drivers\MongoDriver::NAME,
+        'engine' => InQuery\Engine::MONGO,
         'host' => 'localhost',
         'port' => '27017',
         'db' => 'example',
@@ -38,7 +38,7 @@ $db = InQuery\InQuery::init([
     [
         'default' => false,
         'name' => 'db2',
-        'driver' => InQuery\Drivers\MySqlDriver::MYSQL,
+        'engine' => InQuery\Engine::MYSQL,
         'host' => 'localhost',
         'port' => '3306',
         'db' => 'example',
@@ -50,7 +50,7 @@ $db = InQuery\InQuery::init([
 
 ## Get an instance of the db driver
 
-Once you have established a connection you can get an instance of your database drivers in two ways.
+Once you have established a connection you can get an instance of your database driver in two ways.
 
 ### Default driver
 
@@ -58,19 +58,19 @@ This will return your default driver, or if you only have one driver defined, yo
 
 ```php
 // ... assuming you have $db from above
-$driver = $db->getDriver();
+$driver = $db->getConnection();
 // OR
-$driver = InQuery\InQuery::getInstance()->getDriver();
+$driver = InQuery\InQuery::getInstance()->getConnection();
 ```
 
-### Returning specials driver (when more than one)
+### Returning specific driver (when more than one)
 
 This would return the driver for connection named 'db2' in the above example with 2 drivers.
 ```php
 // ...assuming you have $db from above
-$db2Driver = $db->db2->getDriver();
+$db2Driver = $db->db2;
 // OR
-$db2Driver = InQuery\InQuery::getInstance()->db2->getDriver();
+$db2Driver = InQuery\InQuery::getInstance()->db2;
 ```
 ## Querying the DB
 
@@ -99,16 +99,17 @@ $db = InQuery::init([
 ]);
 
 // get driver
-$driver = $db->getDriver();
+$driver = $db->getConnection();
 
 // query the driver with the table name and query params
 try {
     // finds username, firstName, lastName, and lastLoggedIn fields for all logged in users
     // orders by lastLoggedIn desc, so most recent logins
-    $result = $driver->find('users',
+    $findQuery = $driver->find('users',
     ['loggedIn', '=', true],
     ['username', 'firstName', 'lastName', 'lastLoggedIn'], 
     ['lastLoggedIn', -1]);
+    $result = $driver->exec($findQuery);
 } catch (DependencyException $e) {
     // you don't have the driver installed
     echo $e->getMessage() . var_export($e, true);

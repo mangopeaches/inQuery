@@ -3,6 +3,7 @@ namespace InQuery\Drivers;
 
 use InQuery\Driver;
 use InQuery\Drivers\BaseDriver;
+use InQuery\Queries\FindQuery;
 
 /**
  * MySql database driver.
