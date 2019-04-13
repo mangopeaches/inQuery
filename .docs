@@ -1,1 +1,14 @@
-potentially implement readOnly flag for connection, insert/update/delete throw ReadOnlyException
+$db->table('someTable')->select('ferer','dsdsd','sdsdsd')->where('dick', 'butt')->get();
+
+$db->table('someTable')->select('ferer','dsdsd','sdsdsd')->where('dick', '!=', 'butt')->get();
+
+$db->table('someTable')->select('ferer','dsdsd','sdsdsd')->where('dick', 'in', ['butt', 'mouth'])->get();
+
+$db->table('someTable')->select('ferer','dsdsd','sdsdsd')->where('dick', 'in', ['butt', 'mouth'])->join('anotherTable', [
+    'thisColumn' => 'thatColumn',
+    'anotherColumn' => 'thatOtherColumn'
+], $optionalType)->select('balls', 'weiners', 'farts')->where('anus', 'good')->get();
+
+table returns an instance of Query
+
+then GET uses QueryBuilder and Driver to perform the execution and return the QueryResult (which should be common across types as well)

@@ -2,6 +2,8 @@
 namespace InQuery\Drivers;
 
 use InQuery\Driver;
+use InQuery\Command;
+use InQuery\QueryResult;
 
 /**
  * Base database driver.
@@ -74,5 +76,21 @@ abstract class BaseDriver implements Driver
     public function getConnection()
     {
         return $this->connection;
+    }
+
+    /**
+     * Executes a db command.
+     * @param Command $command
+     * @param array $params
+     * @param int $limit
+     * @param int $offset
+     * @return QueryResult
+     */
+    public function exec(Command $command, array $params = [], $limit = Driver::OFFSET_DEFAULT, $offset = Driver::OFFSET_DEFAULT)
+    {
+        if (!($command = $query->built())) {
+            $query->build();
+        }
+        //$this->connection->
     }
 }

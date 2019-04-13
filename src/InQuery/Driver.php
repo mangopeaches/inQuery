@@ -3,6 +3,7 @@ namespace InQuery;
 
 use InQuery\QueryResult;
 use InQuery\Exceptions\DatabaseConnectionException;
+use InQuery\Command;
 
 /**
  * Interface which all database drivers must implement.
