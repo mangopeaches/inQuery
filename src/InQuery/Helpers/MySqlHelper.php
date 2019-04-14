@@ -2,6 +2,7 @@
 namespace InQuery\Helpers;
 
 use InQuery\Helpers\StringHelper;
+use InQuery\Query;
 
 /**
  * MySql helper utilities.
@@ -24,7 +25,7 @@ class MySqlHelper
         if (!(is_string($value) && trim(substr($value, 0, 1)) === ':')) {
             $paramName = StringHelper::hashString($table.$field);
         }
-        $condition = $condition === null ? Query::EQUAL : $condition;
+        $condition = $condition === null ? Query::EQ : $condition;
         switch ($condition) {
             case Query::IN:
                 $whereString = "{$table}.{$field} IN (:${paramName})";

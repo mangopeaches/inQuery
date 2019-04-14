@@ -56,7 +56,7 @@ class Query
      * @var array
      */
     protected $conditionals = [
-        self::EQUAL,
+        self::EQ,
         self::NOT_EQ,
         self::IN,
         self::NOT_IN,
@@ -220,7 +220,7 @@ class Query
      * @return bool
      */
     protected function validJoin($type) {
-        return in_array(strtolower($type, $this->joins));
+        return in_array(strtolower($type), $this->joins);
     }
 
     /**

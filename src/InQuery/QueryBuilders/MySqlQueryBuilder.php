@@ -4,8 +4,9 @@ namespace InQuery\QueryBuilders;
 use InQuery\QueryBuilder;
 use InQuery\Query;
 use InQuery\Helpers\MySqlHelper;
+use InQuery\Helpers\StringHelper;
 use InQuery\Command;
-use InQuery\Commands\MysqlCommand;
+use InQuery\Commands\MySqlCommand;
 
 /**
  * Translates input values into mysql commands.
@@ -35,31 +36,31 @@ class MySqlQueryBuilder implements QueryBuilder
                     $fields[] = "{$tables[$index]}.{$field}";
                 }
             }
-            foreach ($tableData[Query::QUERY_SET_WHERE] as $where) {
-                $whereVals = MySqlHelper::buildWhere($tables[$index], ...$where);
+            foreach ($tableData[Query::QUERY_SET_WHERE] as $currentWhere) {
+                $whereVals = MySqlHelper::buildWhere($tables[$index], ...$currentWhere);
                 $where[] = $whereVals[0];
-                $params[$whereVals[1]] = $where[1];
+                $params[$whereVals[1]] = $currentWhere[1];
             }
-            foreach ($tableData[Query::QUERY_SET_ORDER] as $order) {
-                $order[] = "{$tables[$index]}.{$order[0]} {$order[1]}";
+            foreach ($tableData[Query::QUERY_SET_ORDER] as $currentOrder) {
+                $order[] = "{$tables[$index]}.{$currentOrder[0]} {$currentOrder[1]}";
             }
-            foreach ($tableData[Query::QUERY_SET_JOIN] as $join) {
-                $joinStmt = "{$join[2]} {$join[0]} ON";
+            if (!empty($tableData[Query::QUERY_SET_JOIN])) {
+                $joinStmt = "{$tableData[Query::QUERY_SET_JOIN][2]} join {$tableData[Query::QUERY_SET_JOIN][0]} on";
                 $joinConditions = '';
-                foreach ($join[1] as $tableColumn => $joinTableColumn) {
+                foreach ($tableData[Query::QUERY_SET_JOIN][1] as $tableColumn => $joinTableColumn) {
                     if (!StringHelper::isEmpty($joinConditions)) {
                         $joinConditions .= " and";
                     }
-                    $joinStmt .= " {$tables[$index]}.{$tableColumn} = {$join[2]}.{$joinTableColumn}";
+                    $joinStmt .= " {$tables[$index]}.{$tableColumn} = {$tableData[Query::QUERY_SET_JOIN][0]}.{$joinTableColumn}";
                 }
                 $joins[] = "{$joinStmt} {$joinConditions}";
             }
         }
-        $stmt = "select " . StringHelper::joinLines($fields) 
-            . " from " . StringHelper::joinLines($tables) 
+        $stmt = "select " . StringHelper::joinLines($fields, ', ') 
+            . " from " . StringHelper::joinLines($tables, ', ') 
             . (!empty($joins) ? ' ' . StringHelper::joinLines($joins) : '')
-            . (!empty($where) ? ' where ' . StringHelper::joinLines($where) : '')
-            . (!empty($order) ? ' order by ' . StringHelper::joinLines($order) : '');
+            . (!empty($where) ? ' where ' . StringHelper::joinLines($where, ' and ') : '')
+            . (!empty($order) ? ' order by ' . StringHelper::joinLines($order, ', ') : '');
         return new MySqlCommand(Command::TYPE_FIND, $stmt, $params);
     }
 }
