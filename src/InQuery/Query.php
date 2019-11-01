@@ -22,6 +22,8 @@ class Query
     const JOIN_LEFT = 'left';
     const JOIN_RIGHT = 'right';
     const JOIN_OUTER = 'outer';
+    const JOIN_RIGHT_OUTER = 'rightOuter';
+    const JOIN_LEFT_OUTER = 'leftOuter';
 
     /**
      * Define order types.
@@ -235,5 +237,17 @@ class Query
     {
         $command = $this->builder->selectQuery($this);
         return $this->driver->exec($command, $params, $limit, $offset);
+    }
+
+    /**
+     * Executes an insert query.
+     * @param array $params
+     * @return QueryResult
+     * @throws
+     */
+    public function insert(array $params = [])
+    {
+        $command = $this->builder->insertQuery($this);
+        return $this->driver->exec($command, $params);
     }
 }

@@ -16,4 +16,11 @@ interface QueryBuilder
      * @return Command
      */
     public function selectQuery(Query $query);
+
+    /**
+     * Builds an insert query command.
+     * @param Query $query
+     * @return Command
+     */
+    public function insertQuery(Query $query);
 }

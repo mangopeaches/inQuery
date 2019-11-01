@@ -9,6 +9,7 @@ use InQuery\QueryResults\MockQueryResult;
 use InQuery\Drivers\MockDriver;
 use InQuery\Commands\MockCommand;
 use InQuery\Command;
+use InQuery\Query;
 
 /**
  * Test cases for InQuery class.
@@ -16,7 +17,7 @@ use InQuery\Command;
  * @author Thomas Breese <thomasjbreese@gmail.com>
  * @runTestsInSeparateProcesses
  */
-class InQueryTestCase extends TestCase
+class InQueryTest extends TestCase
 {
     /**
      * Tests thrown error when calling getInstance() without init().
@@ -296,9 +297,8 @@ class InQueryTestCase extends TestCase
             'username' => 'username',
             'password' => 'password'
         ])->getConnection();
-        $findQuery = $db->find('testTable');
-        $this->assertTrue($findQuery instanceof MockCommand);
-        $this->assertTrue($findQuery->getType() === Command::TYPE_FIND);
+        $findQuery = $db->query()->table('testTable');
+        $this->assertTrue($findQuery instanceof Query);
     }
 
     /**
@@ -315,8 +315,7 @@ class InQueryTestCase extends TestCase
             'username' => 'username',
             'password' => 'password'
         ])->getConnection();
-        $findQuery = $db->find('testTable');
-        $result = $db->exec($findQuery);
+        $result = $db->query()->table('testTable')->get();
         $this->assertTrue($result instanceof MockQueryResult);
     }
 }

@@ -2,6 +2,7 @@
 namespace InQuery;
 
 use InQuery\QueryResult;
+use InQuery\Query;
 use InQuery\Exceptions\DatabaseConnectionException;
 use InQuery\Command;
 

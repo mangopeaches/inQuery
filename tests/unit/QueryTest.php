@@ -11,7 +11,7 @@ use InQuery\QueryBuilders\MockQueryBuilder;
  * @author Thomas Breese <thomasjbreese@gmail.com>
  * @runTestsInSeparateProcesses
  */
-class QueryTests extends TestCase
+class QueryTest extends TestCase
 {
     /**
      * Tests populating table.
@@ -98,6 +98,6 @@ class QueryTests extends TestCase
         $query = new Query(new MockDriver('localhost', 'test'), new MockQueryBuilder());
         $query->table('test')->join('joinTable', ['column1' => 'column1_fk']);
         $queryData = $query->getQueryData();
-        $this->assertTrue($queryData[0][Query::QUERY_SET_JOIN] === ['joinTable', ['column1' => 'column1_fk'], Query::JOIN_TYPE_INNER]);
+        $this->assertTrue($queryData[0][Query::QUERY_SET_JOIN] === ['joinTable', ['column1' => 'column1_fk'], Query::JOIN_INNER]);
     }
 }

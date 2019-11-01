@@ -76,7 +76,7 @@ $db2Driver = InQuery\InQuery::getInstance()->db2;
 
 Queries can be performed against the driver directly or the connection object, which will delegate to the driver itself.
 
-*Note*: The driver actually never establishes a connection to the database until the first read or write operation is requested. This saves the extra overhead of establishing unnecessary connections that aren't used, but means that all read and write options can potentially throw the same `DatabaseConnectionException`, `DependencyConnections`, and `DatabaseException` execptions. It's always good practive to wrap these actions in a try/catch block for your safety.
+*Note*: The driver actually never establishes a connection to the database until the first read or write operation is requested. This saves the extra overhead of establishing unnecessary connections that aren't used, but means that all read and write options can potentially throw the same `DatabaseConnectionException`, `DependencyConnections`, and `DatabaseException` exceptions. It's always good practive to wrap these actions in a try/catch block for your safety.
 
 ```php
 <?php
@@ -103,13 +103,12 @@ $driver = $db->getConnection();
 
 // query the driver with the table name and query params
 try {
-    // finds username, firstName, lastName, and lastLoggedIn fields for all logged in users
-    // orders by lastLoggedIn desc, so most recent logins
-    $findQuery = $driver->find('users',
-    ['loggedIn', '=', true],
-    ['username', 'firstName', 'lastName', 'lastLoggedIn'], 
-    ['lastLoggedIn', -1]);
-    $result = $driver->exec($findQuery);
+    $results = $driver->query()
+        ->table('test')
+        ->select('column1', 'column2')
+        ->where('column1', ':value')
+        ->order('column1', Query::ORDER_DESC)
+        ->get([':value' => 'test']);
 } catch (DependencyException $e) {
     // you don't have the driver installed
     echo $e->getMessage() . var_export($e, true);

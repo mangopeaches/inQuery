@@ -13,4 +13,5 @@ class DependencyException extends BaseException
      * Define invalid params exception codes.
      */
     const MISSING_MONGO_DRIVER = 600;
+    const MISSING_PDO_DRIVER = 700;
 }

@@ -57,10 +57,20 @@ class MySqlQueryBuilder implements QueryBuilder
             }
         }
         $stmt = "select " . StringHelper::joinLines($fields, ', ') 
-            . " from " . StringHelper::joinLines($tables, ', ') 
+            . " from " . $tables[0] 
             . (!empty($joins) ? ' ' . StringHelper::joinLines($joins) : '')
             . (!empty($where) ? ' where ' . StringHelper::joinLines($where, ' and ') : '')
             . (!empty($order) ? ' order by ' . StringHelper::joinLines($order, ', ') : '');
         return new MySqlCommand(Command::TYPE_FIND, $stmt, $params);
+    }
+
+    /**
+     * Builds an insert query and returns the command.
+     * @param Query $query
+     * @return Command
+     */
+    public function insertQuery(Query $query)
+    {
+        return new MySqlCommand(Command::TYPE_INSERT, $stmt, $params);
     }
 }
