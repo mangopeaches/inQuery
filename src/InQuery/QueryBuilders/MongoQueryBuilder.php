@@ -21,7 +21,7 @@ class MongoQueryBuilder implements QueryBuilder
      */
     public function find($dataSet, array $conditions = [], array $fields = [], array $order = [], array $options = [])
     {
-        
+        return (new Query())->find($dataSet, $conditions, $fields, $order, $options);
     }
 
     /**
@@ -62,5 +62,22 @@ class MongoQueryBuilder implements QueryBuilder
     private static function buildOptions(array $options = [])
     {
 
+    }
+
+    /**
+     * Builds query object into mongo query commands.
+     * @param Query $query
+     * @return Command
+     */
+    public function build(Query $query)
+    {
+        // process the query set and build it into an execution string
+        $queryValues = [];
+        while ($querySet = $query->next()) {
+            switch ($querySet['type']) {
+
+            }
+        }
+        return new Command($queryValues);
     }
 }

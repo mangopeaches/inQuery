@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit colors="true" bootstrap="vendor/autoload.php">
     <testsuites>
-        <testsuite name="InQuery test suite">
-            <directory>tests/InQuery/*.php</directory>
-            <file>tests/InQuery/InQueryTestCase.php</file>
+        <testsuite name="InQuery Unit Tests">
+            <directory suffix="Test.php">tests/unit</directory>
         </testsuite>
     </testsuites>
 </phpunit>

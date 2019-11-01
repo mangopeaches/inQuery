@@ -2,6 +2,8 @@
 namespace InQuery\Drivers;
 
 use InQuery\Driver;
+use InQuery\Command;
+use InQuery\QueryResult;
 
 /**
  * Base database driver.
@@ -45,6 +47,12 @@ abstract class BaseDriver implements Driver
     protected $password = '';
 
     /**
+     * Character set.
+     * @var string
+     */
+    protected $charset = '';
+
+    /**
      * Intance of the database connection.
      * @var mixed
      */
@@ -57,14 +65,16 @@ abstract class BaseDriver implements Driver
      * @param int $port (optional)
      * @param string $username (optional)
      * @param string $password (optional)
+     * @param string $charset (optinal)
      */
-    public function __construct($host, $db, $port = 0, $username = '', $password = '')
+    public function __construct($host, $db, $port = 0, $username = '', $password = '', $charset = '')
     {
         $this->host = $host;
         $this->db = $db;
         $this->port = $port;
         $this->username = $username;
         $this->password = $password;
+        $this->charset = $charset;
     }
 
     /**

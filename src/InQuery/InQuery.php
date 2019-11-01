@@ -49,11 +49,12 @@ final class InQuery
             $port = isset($paramSet['port']) ? $paramSet['port'] : 0;
             $username = isset($paramSet['username']) ? $paramSet['username'] : '';
             $password = isset($paramSet['password']) ? $paramSet['password'] : '';
+            $charset = isset($paramSet['charset']) ? $paramSet['charset'] : '';
             $default = isset($paramSet['default']) && $paramSet['default'] === true;
             $this->conns[] = [
                 'name' => $name,
                 'default' => $default,
-                'engine' => Engine::create($paramSet['engine'], $paramSet['host'], $paramSet['db'], $port, $username, $password)
+                'engine' => Engine::create($paramSet['engine'], $paramSet['host'], $paramSet['db'], $port, $username, $password, $charset)
             ];
         }
     }

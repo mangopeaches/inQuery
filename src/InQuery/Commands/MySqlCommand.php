@@ -22,14 +22,22 @@ class MySqlCommand implements Command
     protected $command = '';
 
     /**
+     * Query params.
+     * @var array
+     */
+    protected $params = [];
+
+    /**
      * Instantiate a new instance.
      * @param string $type
      * @param string $command
+     * @param array $params
      */
-    public function __construct($type, $command)
+    public function __construct($type, $command, array $params = [])
     {
         $this->type = $type;
         $this->command = $command;
+        $this->params = $params;
     }
 
     /**
@@ -39,6 +47,15 @@ class MySqlCommand implements Command
     public function getCommand()
     {
         return $this->command;
+    }
+
+    /**
+     * Returns params.
+     * @return array
+     */
+    public function getParams()
+    {
+        return $this->params;
     }
 
     /**

@@ -2,65 +2,75 @@
 namespace InQuery\QueryBuilders;
 
 use InQuery\QueryBuilder;
-use InQuery\Queries\FindQuery;
+use InQuery\Query;
+use InQuery\Helpers\MySqlHelper;
+use InQuery\Helpers\StringHelper;
+use InQuery\Command;
+use InQuery\Commands\MySqlCommand;
 
 /**
- * Translates input values into mysql format.
+ * Translates input values into mysql commands.
  * @author Thomas Breese <thomasjbreese@gmail.com>
  */
 class MySqlQueryBuilder implements QueryBuilder
 {
     /**
-     * Prepares a find command for execution.
-     * @param string $dataSet data set against which to perform the query
-     * @param array $conditions (optional) array of query conditions
-     * @param array $fields (optional) fields to return, all if omittied
-     * @param array $order (optional) fields to order by
-     * @param array $options (optional) options to be passed through as query params
+     * Builds a lookup query command.
+     * @param Query $query
      * @return Command
      */
-    public function find($dataSet, array $conditions = [], array $fields = [], array $order = [], array $options = [])
+    public function selectQuery(Query $query)
     {
-        
+        $fields = [];
+        $joins = [];
+        $where = [];
+        $order = [];
+        $tables = [];
+        $params = [];
+        foreach ($query->getQueryData() as $index => $tableData) {
+            $tables[$index] = $tableData[Query::QUERY_SET_TABLE];
+            if (count($tableData[Query::QUERY_SET_FIELDS]) === 0) {
+                $fields[] = "{$tables[$index]}.*";
+            } else {
+                foreach ($tableData[Query::QUERY_SET_FIELDS] as $field) {
+                    $fields[] = "{$tables[$index]}.{$field}";
+                }
+            }
+            foreach ($tableData[Query::QUERY_SET_WHERE] as $currentWhere) {
+                $whereVals = MySqlHelper::buildWhere($tables[$index], ...$currentWhere);
+                $where[] = $whereVals[0];
+                $params[$whereVals[1]] = $currentWhere[1];
+            }
+            foreach ($tableData[Query::QUERY_SET_ORDER] as $currentOrder) {
+                $order[] = "{$tables[$index]}.{$currentOrder[0]} {$currentOrder[1]}";
+            }
+            if (!empty($tableData[Query::QUERY_SET_JOIN])) {
+                $joinStmt = "{$tableData[Query::QUERY_SET_JOIN][2]} join {$tableData[Query::QUERY_SET_JOIN][0]} on";
+                $joinConditions = '';
+                foreach ($tableData[Query::QUERY_SET_JOIN][1] as $tableColumn => $joinTableColumn) {
+                    if (!StringHelper::isEmpty($joinConditions)) {
+                        $joinConditions .= " and";
+                    }
+                    $joinStmt .= " {$tables[$index]}.{$tableColumn} = {$tableData[Query::QUERY_SET_JOIN][0]}.{$joinTableColumn}";
+                }
+                $joins[] = "{$joinStmt} {$joinConditions}";
+            }
+        }
+        $stmt = "select " . StringHelper::joinLines($fields, ', ') 
+            . " from " . $tables[0] 
+            . (!empty($joins) ? ' ' . StringHelper::joinLines($joins) : '')
+            . (!empty($where) ? ' where ' . StringHelper::joinLines($where, ' and ') : '')
+            . (!empty($order) ? ' order by ' . StringHelper::joinLines($order, ', ') : '');
+        return new MySqlCommand(Command::TYPE_FIND, $stmt, $params);
     }
 
     /**
-     * Builds the condition set into query format.
-     * @param array $conditions (optional)
-     * @return array
+     * Builds an insert query and returns the command.
+     * @param Query $query
+     * @return Command
      */
-    private static function buildConditions(array $conditions = [])
+    public function insertQuery(Query $query)
     {
-
-    }
-
-    /**
-     * Builds the fields set into query format.
-     * @param array $fields (optional)
-     * @return array
-     */
-    private static function buildFields(array $fields = [])
-    {
-        
-    }
-
-    /**
-     * Builds set of order fields into order by format.
-     * @param array $order (optional)
-     * @return array
-     */
-    private static function buildOrder(array $order = [])
-    {
-
-    }
-
-    /**
-     * Builds options set into options format.
-     * @param array $options (optional)
-     * @return array
-     */
-    private static function buildOptions(array $options = [])
-    {
-
+        return new MySqlCommand(Command::TYPE_INSERT, $stmt, $params);
     }
 }

@@ -1,1 +1,0 @@
-potentially implement readOnly flag for connection, insert/update/delete throw ReadOnlyException

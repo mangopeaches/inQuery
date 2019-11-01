@@ -22,6 +22,12 @@ interface Command
     public function getCommand();
 
     /**
+     * Returns params.
+     * @return array
+     */
+    public function getParams();
+
+    /**
      * Returns command type.
      * @return string
      */
