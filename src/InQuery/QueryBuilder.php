@@ -23,4 +23,11 @@ interface QueryBuilder
      * @return Command
      */
     public function insertQuery(Query $query);
+
+    /**
+     * Builds a delete query command.
+     * @param Query $query
+     * @return Command
+     */
+    public function deleteQuery(Query $query);
 }

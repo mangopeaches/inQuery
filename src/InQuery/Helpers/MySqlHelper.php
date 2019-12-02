@@ -3,6 +3,7 @@ namespace InQuery\Helpers;
 
 use InQuery\Helpers\StringHelper;
 use InQuery\Query;
+use InQuery\Command;
 
 /**
  * MySql helper utilities.
@@ -10,6 +11,51 @@ use InQuery\Query;
  */
 class MySqlHelper
 {
+    /**
+     * Parses Query elements into sets of usable data.
+     * @param Query $query
+     * @return array
+     */
+    public static function parseQueryElements(Query $query)
+    {
+        $fields = [];
+        $joins = [];
+        $where = [];
+        $order = [];
+        $tables = [];
+        $params = [];
+        foreach ($query->getQueryData() as $index => $tableData) {
+            $tables[$index] = $tableData[Query::QUERY_SET_TABLE];
+            if (count($tableData[Query::QUERY_SET_FIELDS]) === 0) {
+                $fields[] = "{$tables[$index]}.*";
+            } else {
+                foreach ($tableData[Query::QUERY_SET_FIELDS] as $field) {
+                    $fields[] = "{$tables[$index]}.{$field}";
+                }
+            }
+            foreach ($tableData[Query::QUERY_SET_WHERE] as $currentWhere) {
+                $whereVals = MySqlHelper::buildWhere($tables[$index], ...$currentWhere);
+                $where[] = $whereVals[0];
+                $params[$whereVals[1]] = $currentWhere[1];
+            }
+            foreach ($tableData[Query::QUERY_SET_ORDER] as $currentOrder) {
+                $order[] = "{$tables[$index]}.{$currentOrder[0]} {$currentOrder[1]}";
+            }
+            if (!empty($tableData[Query::QUERY_SET_JOIN])) {
+                $joinStmt = "{$tableData[Query::QUERY_SET_JOIN][2]} join {$tableData[Query::QUERY_SET_JOIN][0]} on";
+                $joinConditions = '';
+                foreach ($tableData[Query::QUERY_SET_JOIN][1] as $tableColumn => $joinTableColumn) {
+                    if (!StringHelper::isEmpty($joinConditions)) {
+                        $joinConditions .= " and";
+                    }
+                    $joinStmt .= " {$tables[$index]}.{$tableColumn} = {$tableData[Query::QUERY_SET_JOIN][0]}.{$joinTableColumn}";
+                }
+                $joins[] = "{$joinStmt} {$joinConditions}";
+            }
+        }
+        return compact('fields', 'joins', 'where', 'order', 'tables', 'params');
+    }
+
     /**
      * Translates where parameters into appropriate where clause.
      * @param string $table

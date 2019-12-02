@@ -3,3 +3,4 @@ composer.lock
 .DS_Store
 .docs/
 .phpunit
+commands.sql

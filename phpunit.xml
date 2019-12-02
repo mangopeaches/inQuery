@@ -4,5 +4,8 @@
         <testsuite name="InQuery Unit Tests">
             <directory suffix="Test.php">tests/unit</directory>
         </testsuite>
+        <!-- <testsuite name="InQuery Compoment Tests">
+            <directory suffix="Test.php">tests/component</directory>
+        </testsuite> -->
     </testsuites>
 </phpunit>
