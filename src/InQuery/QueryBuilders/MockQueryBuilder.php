@@ -22,8 +22,23 @@ class MockQueryBuilder implements QueryBuilder
         return new MockCommand(Command::TYPE_FIND, "select * from bananas", []);
     }
 
+    /**
+     * Builds an insert query.
+     * @param Query $query
+     * @return Command
+     */
     public function insertQuery(Query $query)
     {
         return new MockCommand(Command::TYPE_INSERT, "insert into blah", []);
+    }
+
+    /**
+     * Builds a delete query.
+     * @param Query $query
+     * @return Command
+     */
+    public function deleteQuery(Query $query)
+    {
+        return new MockCommand(Command::TYPE_DELETE, "delete from blah", []);
     }
 }

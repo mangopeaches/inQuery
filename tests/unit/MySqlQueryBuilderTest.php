@@ -104,4 +104,28 @@ class MySqlQueryBuilderTest extends TestCase
         $this->assertTrue($command->getParams() === [':column1' => ':column1', ':column2' => ':column2']);
         $this->assertTrue($command->getType() === Command::TYPE_FIND);
     }
+
+    /**
+     * Tests building a delete condition on a single table.
+     */
+    public function testDeleteSingleTable()
+    {
+        $query = new Query(new MockDriver('localhost', 'test'), new MySqlQueryBuilder());
+        $query->table('test')->delete();
+        $mysqlQueryBuilder = new MySqlQueryBuilder();
+        $command = $mysqlQueryBuilder->deleteQuery($query);
+        $this->assertTrue($command->getCommand() === "delete from test");
+    }
+
+    /**
+     * Tests building a delete command across multiple tables.
+     */
+    public function testDeleteMultipleTables()
+    {
+        $query = new Query(new MockDriver('localhost', 'test'), new MySqlQueryBuilder());
+        $query->table('test')->join('test2', ['test1Col' => 'test2Col'])->delete();
+        $mysqlQueryBuilder = new MySqlQueryBuilder();
+        $command = $mysqlQueryBuilder->deleteQuery($query);
+        $this->assertTrue($command->getCommand() === "delete from test inner join test2 on test.test1Col = test2.test2Col");
+    }
 }

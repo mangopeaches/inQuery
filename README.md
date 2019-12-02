@@ -72,11 +72,100 @@ $db2Driver = $db->db2;
 // OR
 $db2Driver = InQuery\InQuery::getInstance()->db2;
 ```
-## Querying the DB
+
+## Late Connection Establishment
+
+*Note*: The driver actually never establishes a connection to the database until the first operation is requested. This saves the extra overhead of establishing unnecessary connections that aren't used, but means that all read and write options can potentially throw the same `DatabaseConnectionException`, `DependencyConnections`, and `DatabaseException` exceptions. It's always good practive to wrap these actions in a try/catch block for your safety.
+
+## Select Queries
+
+The pattern for querying is as such:
+* First instantiate a new query via `query()`
+* Specify the table you're querying against with `table('tableName')`
+* (optional) Specify tables to join via the `join()` command
+* (optional) Specify table column names, as a list `select('column1', 'column2')`
+* (optional) Specify where conditions via the `where()` command
+* (optional) Specify order conditions via the `order()` command
+* Execute the query via `get()` with an optional array of query parameters and, optionally, offset and limit parameters
+
+
+### Get Definition
+```php
+/**
+ * Execute the select query.
+ * @param array $params
+ * @param int $offset
+ * @param int $limit
+ * @return QueryResult
+ * @throws 
+ */
+public function get(array $params = [], $offset = Driver::OFFSET_DEFAULT, $limit = Driver::RETURNED_ROW_DEFAULT);
+```
+
+### Example Usage
+```php
+$driver->query()
+    ->table('test')
+    ->select('column1', 'column2')
+    ->where('column1', ':value')
+    ->order('column1', Query::ORDER_DESC)
+    ->get([':value' => 'test']);
+```
+
+## Joining Tables
+```php
+/**
+ * Defines a join.
+ * @param string $table
+ * @param array $on
+ * @param string $type
+ * @return $this
+ * @throws InvalidJoinException
+ */
+public function join($table, array $on, $type = self::JOIN_INNER);
+```
+
+The `join` command table a table name, of the table to join on, an array of join conditions, in the format:
+```php
+join('joinedTable', ['parentTableColumn' => 'joinedTableColumn', ...])
+```
+You can specify multiple columns to join on as well, all of which will be combined with AND.
+
+`join` also takes an optional third parameter, representing the join type. The following types are available:
+```php
+Query::JOIN_INNER // inner join
+Query::JOIN_LEFT // left
+Query::JOIN_RIGHT // right
+Query::JOIN_OUTER // outer
+Query::JOIN_RIGHT_OUTER // right outer
+Query::JOIN_LEFT_OUTER // left outer
+```
+
+## Delete Queries
+
+The pattern for delete queries is as such:
+* First instantiate a new query via `query()`
+* Specify the table from which you would like to delete via `table('tableName')`
+* (optional) Specify tables to join via the `join()` command
+* (optional) Specify where conditions via the `where()` command
+* Execute the query via the `delete()` command with an optional set of query parameters
+
+```php
+/**
+ * Execute the delete query.
+ * @param array $params
+ * @param int $offset
+ * @param int $limit
+ * @return QueryResult
+ * @throws 
+ */
+public function get(array $params = [], $offset = Driver::OFFSET_DEFAULT, $limit = Driver::RETURNED_ROW_DEFAULT);
+```
+
+
+## Full Sample
 
 Queries can be performed against the driver directly or the connection object, which will delegate to the driver itself.
-
-*Note*: The driver actually never establishes a connection to the database until the first read or write operation is requested. This saves the extra overhead of establishing unnecessary connections that aren't used, but means that all read and write options can potentially throw the same `DatabaseConnectionException`, `DependencyConnections`, and `DatabaseException` exceptions. It's always good practive to wrap these actions in a try/catch block for your safety.
 
 ```php
 <?php
@@ -105,10 +194,8 @@ $driver = $db->getConnection();
 try {
     $results = $driver->query()
         ->table('test')
-        ->select('column1', 'column2')
         ->where('column1', ':value')
-        ->order('column1', Query::ORDER_DESC)
-        ->get([':value' => 'test']);
+        ->delete([':value' => 'test']);
 } catch (DependencyException $e) {
     // you don't have the driver installed
     echo $e->getMessage() . var_export($e, true);

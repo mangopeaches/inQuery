@@ -21,47 +21,13 @@ class MySqlQueryBuilder implements QueryBuilder
      */
     public function selectQuery(Query $query)
     {
-        $fields = [];
-        $joins = [];
-        $where = [];
-        $order = [];
-        $tables = [];
-        $params = [];
-        foreach ($query->getQueryData() as $index => $tableData) {
-            $tables[$index] = $tableData[Query::QUERY_SET_TABLE];
-            if (count($tableData[Query::QUERY_SET_FIELDS]) === 0) {
-                $fields[] = "{$tables[$index]}.*";
-            } else {
-                foreach ($tableData[Query::QUERY_SET_FIELDS] as $field) {
-                    $fields[] = "{$tables[$index]}.{$field}";
-                }
-            }
-            foreach ($tableData[Query::QUERY_SET_WHERE] as $currentWhere) {
-                $whereVals = MySqlHelper::buildWhere($tables[$index], ...$currentWhere);
-                $where[] = $whereVals[0];
-                $params[$whereVals[1]] = $currentWhere[1];
-            }
-            foreach ($tableData[Query::QUERY_SET_ORDER] as $currentOrder) {
-                $order[] = "{$tables[$index]}.{$currentOrder[0]} {$currentOrder[1]}";
-            }
-            if (!empty($tableData[Query::QUERY_SET_JOIN])) {
-                $joinStmt = "{$tableData[Query::QUERY_SET_JOIN][2]} join {$tableData[Query::QUERY_SET_JOIN][0]} on";
-                $joinConditions = '';
-                foreach ($tableData[Query::QUERY_SET_JOIN][1] as $tableColumn => $joinTableColumn) {
-                    if (!StringHelper::isEmpty($joinConditions)) {
-                        $joinConditions .= " and";
-                    }
-                    $joinStmt .= " {$tables[$index]}.{$tableColumn} = {$tableData[Query::QUERY_SET_JOIN][0]}.{$joinTableColumn}";
-                }
-                $joins[] = "{$joinStmt} {$joinConditions}";
-            }
-        }
-        $stmt = "select " . StringHelper::joinLines($fields, ', ') 
-            . " from " . $tables[0] 
-            . (!empty($joins) ? ' ' . StringHelper::joinLines($joins) : '')
-            . (!empty($where) ? ' where ' . StringHelper::joinLines($where, ' and ') : '')
-            . (!empty($order) ? ' order by ' . StringHelper::joinLines($order, ', ') : '');
-        return new MySqlCommand(Command::TYPE_FIND, $stmt, $params);
+        $queryElements = MySqlHelper::parseQueryElements($query);
+        $stmt = "select " . StringHelper::joinLines($queryElements['fields'], ', ') 
+            . " from " . $queryElements['tables'][0] 
+            . (!empty($queryElements['joins']) ? ' ' . StringHelper::joinLines($queryElements['joins']) : '')
+            . (!empty($queryElements['where']) ? ' where ' . StringHelper::joinLines($queryElements['where'], ' and ') : '')
+            . (!empty($queryElements['order']) ? ' order by ' . StringHelper::joinLines($queryElements['order'], ', ') : '');
+        return new MySqlCommand(Command::TYPE_FIND, $stmt, $queryElements['params']);
     }
 
     /**
@@ -72,5 +38,19 @@ class MySqlQueryBuilder implements QueryBuilder
     public function insertQuery(Query $query)
     {
         return new MySqlCommand(Command::TYPE_INSERT, $stmt, $params);
+    }
+
+    /**
+     * Builds a delete query and returns the command.
+     * @param Query $query
+     * @return Command
+     */
+    public function deleteQuery(Query $query)
+    {
+        $queryElements = MySqlHelper::parseQueryElements($query);
+        $stmt = "delete from " . $queryElements['tables'][0] 
+            . (!empty($queryElements['joins']) ? ' ' . StringHelper::joinLines($queryElements['joins']) : '')
+            . (!empty($queryElements['where']) ? ' where ' . StringHelper::joinLines($queryElements['where'], ' and ') : '');
+        return new MySqlCommand(Command::TYPE_DELETE, $stmt, $queryElements['params']);
     }
 }

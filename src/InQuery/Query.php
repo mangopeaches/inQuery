@@ -240,6 +240,18 @@ class Query
     }
 
     /**
+     * Execute the delete query.
+     * @param array $params
+     * @return QueryResult
+     * @throws
+     */
+    public function delete(array $params = [])
+    {
+        $command = $this->builder->deleteQuery($this);
+        return $this->driver->exec($command, $params);
+    }
+
+    /**
      * Executes an insert query.
      * @param array $params
      * @return QueryResult
