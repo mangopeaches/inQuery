@@ -194,10 +194,8 @@ $driver = $db->getConnection();
 try {
     $results = $driver->query()
         ->table('test')
-        ->select('column1', 'column2')
         ->where('column1', ':value')
-        ->order('column1', Query::ORDER_DESC)
-        ->get([':value' => 'test']);
+        ->delete([':value' => 'test']);
 } catch (DependencyException $e) {
     // you don't have the driver installed
     echo $e->getMessage() . var_export($e, true);
