@@ -65,7 +65,7 @@ class MySqlHelperTest extends TestCase
         }
         $condition = $condition === null ? Query::EQ : $condition;
         $expected = ["{$table}.{$field} {$condition} {$paramName}", $paramName];
-        $cond = MySqlHelper::buildWhere($table, $field, $value, $condition);
+        $cond = MySqlHelper::buildWhereCondition($table, $field, $value, $condition);
         $this->assertTrue($cond === $expected);
     }
 
@@ -98,7 +98,7 @@ class MySqlHelperTest extends TestCase
             $paramName = MySqlHelper::buildHashParam($table.$field);
         }
         $expected = ["{$table}.{$field} {$condition} ({$paramName})", $paramName];
-        $cond = MySqlHelper::buildWhere($table, $field, $value, $condition);
+        $cond = MySqlHelper::buildWhereCondition($table, $field, $value, $condition);
         $this->assertTrue($cond === $expected);
     }
 
@@ -114,7 +114,7 @@ class MySqlHelperTest extends TestCase
             $paramName = MySqlHelper::buildHashParam($table.$field);
         }
         $expected = ["{$table}.{$field} is null", $paramName];
-        $cond = MySqlHelper::buildWhere($table, $field, $value, Query::IS_NULL);
+        $cond = MySqlHelper::buildWhereCondition($table, $field, $value, Query::IS_NULL);
         $this->assertTrue($cond === $expected);
     }
 }

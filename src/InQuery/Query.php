@@ -39,6 +39,14 @@ class Query
     const QUERY_SET_WHERE = 'where';
     const QUERY_SET_JOIN = 'join';
     const QUERY_SET_ORDER = 'order';
+    const QUERY_SET_COLUMNS = 'columns';
+    const QUERY_SET_DATA = 'data';
+    const QUERY_SET_DUPLICATE_KEY = 'duplicateKey';
+
+    /**
+     * Define duplidate key update constants.
+     */
+    const DUPLIDATE_KEY_UPDATE = 'update';
 
     /**
      * Define conditionals.
@@ -127,12 +135,14 @@ class Query
         $this->queryData[$this->querySet][self::QUERY_SET_WHERE] = [];
         $this->queryData[$this->querySet][self::QUERY_SET_JOIN] = [];
         $this->queryData[$this->querySet][self::QUERY_SET_ORDER] = [];
+        $this->queryData[$this->querySet][self::QUERY_SET_COLUMNS] = [];
+        $this->queryData[$this->querySet][self::QUERY_SET_DUPLICATE_KEY] = [];
         return $this;
     }
 
     /**
      * Sets query fields.
-     * @param string $fields
+     * @param string|array $fields
      * @return $this
      */
     public function select(...$fields)
@@ -140,6 +150,21 @@ class Query
         foreach ($fields as $field) {
             if (!in_array($field, $this->queryData[$this->querySet][self::QUERY_SET_FIELDS])) {
                 $this->queryData[$this->querySet][self::QUERY_SET_FIELDS][] = $field;
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * Sets column fields.
+     * @param string|array $columns
+     * @return $this
+     */
+    public function columns(...$columns)
+    {
+        foreach ($columns as $column) {
+            if (!in_array($column, $this->queryData[$this->querySet][self::QUERY_SET_COLUMNS])) {
+                $this->queryData[$this->querySet][self::QUERY_SET_COLUMNS][] = $column;
             }
         }
         return $this;
@@ -259,7 +284,19 @@ class Query
      */
     public function insert(array $params = [])
     {
+        $this->queryData[$this->querySet][self::QUERY_SET_DATA][] = $params;
         $command = $this->builder->insertQuery($this);
-        return $this->driver->exec($command, $params);
+        return $this->driver->exec($command, $command->getParams());
+    }
+
+    /**
+     * Appends on duplicate key update data.
+     * @param array $params
+     * @return $this
+     */
+    public function onDuplicateKeyUpdate(array $params)
+    {
+        $this->queryData[$this->querySet][self::QUERY_SET_DUPLICATE_KEY] = $params;
+        return $this;
     }
 }

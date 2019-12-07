@@ -162,6 +162,57 @@ The pattern for delete queries is as such:
 public function get(array $params = [], $offset = Driver::OFFSET_DEFAULT, $limit = Driver::RETURNED_ROW_DEFAULT);
 ```
 
+## Insert Queries
+
+The pattern for insert queries is as such:
+* First instantiate a new query via `query()`
+* Specify the table from which you would like to insert via `table('tableName')`
+* Specify the column names which you would like to insert via the `columns()` command
+* (optionally) Specify update params on duplicate key collision via `onDuplicateKeyUpdate()` command
+* Execute the query via the `insert()` command
+
+```php
+/**
+ * Execute an insert query.
+ * @param array $params
+ * @return QueryResult
+ * @throws
+ */
+public function insert(array $params);
+```
+
+### On Duplicate Key Update
+
+If you elect to perform an ON DUPLICATE KEY UPDATE on your insert statement, you have a few options.
+
+You can choose to update a column with the updated value you are currently inserting by doing the following manner (this example assumes lastName is a unique index, and will update the previous 'Smith' lastName record to have the firstName 'John')
+```php
+$driver->query()->table('user')->columns('firstName', 'lastName')->onDuplicateKeyUpdate(['firstName' => Query::DUPLIDATE_KEY_UPDATE])->insert(['John', 'Smith']);
+```
+
+You can also use a literal value, if you would like (in this example, assume the unique key is lastName. This would always explicitly update the age column to 25 whenever you try to insert a 'Smith' lastName. Apparently Smith's are perpetually 25 years old??):
+```php
+$driver->query()->table('user')->columns('firstName', 'lastName', 'age')->onDuplicateKeyUpdate(['age' => 15])->insert(['John', 'Smith', 25]);
+```
+
+Additionally, you can choose a more expressive options. In this example, on duplicate key, you'll add the insertion values of a and b and store their sum in column c):
+```php
+$driver->query()->table('test')->columns('a', 'b', 'c')->onDuplicateKeyUpdate([
+    'c' => [
+        Query::OPERATION_ADD, [
+            'a' => Query::DUPLICATE_KEY_UPDATE,
+            'b' => Query::DUPLICATE_KEY_UPDATE
+        ]
+    ]
+])->insert([2, 4, 4]);
+```
+
+In that example, your resulting rown would end up like:
+```sql
+|   a   |   b   |   c   |
+|   2   |   4   |   6   |   
+```
+
 
 ## Full Sample
 

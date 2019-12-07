@@ -128,4 +128,43 @@ class MySqlQueryBuilderTest extends TestCase
         $command = $mysqlQueryBuilder->deleteQuery($query);
         $this->assertTrue($command->getCommand() === "delete from test inner join test2 on test.test1Col = test2.test2Col");
     }
+
+    /**
+     * Tests basic insert statement construction for a single row.
+     */
+    public function testInsertSingleRow()
+    {
+        $query = new Query(new MockDriver('localhost', 'test'), new MySqlQueryBuilder());
+        $query->table('test')->columns('test', 'test2')->insert(['1', '2']);
+        $mysqlQueryBuilder = new MySqlQueryBuilder();
+        $command = $mysqlQueryBuilder->insertQuery($query);
+        $this->assertTrue($command->getCommand() === "insert into test (test, test2) values (?, ?)");
+    }
+
+    /**
+     * Tests basic insert statement constructoion for multiple row insertion.
+     */
+    public function testInsertMultipleRows()
+    {
+        $query = new Query(new MockDriver('localhost', 'test'), new MySqlQueryBuilder());
+        $query->table('test')->columns('test', 'test2')->insert([['1', '2'], ['3', '4']]);
+        $mysqlQueryBuilder = new MySqlQueryBuilder();
+        $command = $mysqlQueryBuilder->insertQuery($query);
+        $this->assertTrue($command->getCommand() === "insert into test (test, test2) values (?, ?), (?, ?)");
+    }
+
+    /**
+     * Tests on duplicate key update building.
+     */
+    public function testDuplicateKeyUpdate()
+    {
+        $query = new Query(new MockDriver('localhost', 'test'), new MySqlQueryBuilder());
+        $query->table('test')->columns('test', 'test2')->onDuplicateKeyUpdate([
+            'test' => Query::DUPLICATE_KEY_RETAIN,
+            'test2' => Query::DUPLIATE_KEY_UPDATE
+        ])->insert(['1', '2']);
+        $mysqlQueryBuilder = new MySqlQueryBuilder();
+        $command = $mysqlQueryBuilder->insertQuery($query);
+        $this->assertTrue($command->getCommand() === "insert into test (test, test2) values (?, ?) on duplicate key update ");
+    }
 }
