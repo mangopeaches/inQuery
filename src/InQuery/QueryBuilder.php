@@ -30,4 +30,11 @@ interface QueryBuilder
      * @return Command
      */
     public function deleteQuery(Query $query);
+
+    /**
+     * Builds an update query command.
+     * @param Query $query
+     * @return Command
+     */
+    public function updateQuery(Query $query);
 }

@@ -53,6 +53,7 @@ class MySqlDriver extends BaseDriver implements Driver
      * @param int $offset
      * @param int $limit
      * @return QueryResult
+     * @throws DatabaseConnectionException|DatabaseException
      */
     public function exec(Command $command, array $params = [], $offset = self::OFFSET_DEFAULT, $limit = self::RETURNED_ROW_DEFAULT)
     {

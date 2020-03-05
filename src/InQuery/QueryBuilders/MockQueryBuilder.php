@@ -41,4 +41,14 @@ class MockQueryBuilder implements QueryBuilder
     {
         return new MockCommand(Command::TYPE_DELETE, "delete from blah", []);
     }
+
+    /**
+     * Builds an update query.
+     * @param Query $query
+     * @return Command
+     */
+    public function updateQuery(Query $query)
+    {
+        return new MockQuery(Command::TYPE_UPDATE, "update someTable", []);
+    }
 }

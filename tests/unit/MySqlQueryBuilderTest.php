@@ -160,11 +160,58 @@ class MySqlQueryBuilderTest extends TestCase
     {
         $query = new Query(new MockDriver('localhost', 'test'), new MySqlQueryBuilder());
         $query->table('test')->columns('test', 'test2')->onDuplicateKeyUpdate([
-            'test' => Query::DUPLICATE_KEY_RETAIN,
-            'test2' => Query::DUPLIATE_KEY_UPDATE
+            'test2' => Query::DUPLICATE_KEY_UPDATE
         ])->insert(['1', '2']);
         $mysqlQueryBuilder = new MySqlQueryBuilder();
         $command = $mysqlQueryBuilder->insertQuery($query);
-        $this->assertTrue($command->getCommand() === "insert into test (test, test2) values (?, ?) on duplicate key update ");
+        $this->assertTrue($command->getCommand() === "insert into test (test, test2) values (?, ?) on duplicate key update test2 = values(test2)");
+    }
+    
+    /**
+     * Tests on duplicate key update building with multiple update columns.
+     */
+    public function testDuplicateKeyUpdateMultiples()
+    {
+        $query = new Query(new MockDriver('localhost', 'test'), new MySqlQueryBuilder());
+        $query->table('test')->columns('test', 'test2', 'test3', 'test4')->onDuplicateKeyUpdate([
+            'test' => Query::DUPLICATE_KEY_UPDATE,
+            'test2' => Query::DUPLICATE_KEY_UPDATE,
+            'test3' => Query::DUPLICATE_KEY_UPDATE,
+            'test4' => Query::DUPLICATE_KEY_UPDATE
+        ])->insert(['1', '2', '3', '4']);
+        $mysqlQueryBuilder = new MySqlQueryBuilder();
+        $command = $mysqlQueryBuilder->insertQuery($query);
+        $this->assertTrue($command->getCommand() === "insert into test (test, test2, test3, test4) values (?, ?, ?, ?) on duplicate key update test = values(test) test2 = values(test2) test3 = values(test3) test4 = values(test4)");
+    }
+
+    /**
+     * Tests on duplicate key update building with a constant value to update the columns.
+     */
+    public function testDuplicateKeyUpdateConstantValue()
+    {
+        $query = new Query(new MockDriver('localhost', 'test'), new MySqlQueryBuilder());
+        $query->table('test')->columns('test', 'test2', 'test3', 'test4')->onDuplicateKeyUpdate([
+            'test' => 2
+        ])->insert(['1', '2', '3', '4']);
+        $mysqlQueryBuilder = new MySqlQueryBuilder();
+        $command = $mysqlQueryBuilder->insertQuery($query);
+        $this->assertTrue($command->getCommand() === "insert into test (test, test2, test3, test4) values (?, ?, ?, ?) on duplicate key update test = 2");
+    }
+
+    /**
+     * Tests building a complex on duplicate key update condtion with an operand.
+     */
+    public function testComplexDuplicateKeyUpdateSingleOperation()
+    {
+        $condition = [
+            'c' => [
+                Query::OPERATION_ADD => [
+                    'a' => Query::DUPLICATE_KEY_UPDATE,
+                    'b' => Query::DUPLICATE_KEY_UPDATE
+                ]
+            ]
+        ];
+        $result = MySqlHelper::buildDuplicateKeyComplexOperation($condition);
+        $this->assertTrue($result === 'c = update(a) + update(b)');
     }
 }

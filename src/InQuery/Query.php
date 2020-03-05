@@ -8,6 +8,7 @@ use InQuery\QueryBuilder;
 use InQuery\Exceptions\InvalidConditionalException;
 use InQuery\Exceptions\InvalidOrderException;
 use InQuery\Exceptions\InvalidJoinException;
+use InQuery\Exceptions\DatabaseException;
 
 /**
  * Represents a single query.
@@ -42,11 +43,17 @@ class Query
     const QUERY_SET_COLUMNS = 'columns';
     const QUERY_SET_DATA = 'data';
     const QUERY_SET_DUPLICATE_KEY = 'duplicateKey';
+    const QUERY_SET_SET = 'set';
+
+    /**
+     * Operation constants.
+     */
+    const OPERATION_ADD = '+';
 
     /**
      * Define duplidate key update constants.
      */
-    const DUPLIDATE_KEY_UPDATE = 'update';
+    const DUPLICATE_KEY_UPDATE = 'update';
 
     /**
      * Define conditionals.
@@ -136,7 +143,9 @@ class Query
         $this->queryData[$this->querySet][self::QUERY_SET_JOIN] = [];
         $this->queryData[$this->querySet][self::QUERY_SET_ORDER] = [];
         $this->queryData[$this->querySet][self::QUERY_SET_COLUMNS] = [];
+        $this->queryData[$this->querySet][self::QUERY_SET_DATA] = [];
         $this->queryData[$this->querySet][self::QUERY_SET_DUPLICATE_KEY] = [];
+        $this->queryData[$this->querySet][self::QUERY_SET_SET] = [];
         return $this;
     }
 
@@ -167,6 +176,18 @@ class Query
                 $this->queryData[$this->querySet][self::QUERY_SET_COLUMNS][] = $column;
             }
         }
+        return $this;
+    }
+
+    /**
+     * Wrapper for columns for update query.
+     * @param string $columnName
+     * @param string $value
+     * @return $this
+     */
+    public function set($columnName, $value)
+    {
+        $this->queryData[$this->querySet][self::QUERY_SET_SET][] = [$columnName, $value];
         return $this;
     }
 
@@ -256,7 +277,7 @@ class Query
      * @param int $offset
      * @param int $limit
      * @return QueryResult
-     * @throws 
+     * @throws DatabaseException|DatabaseConnectionException
      */
     public function get(array $params = [], $offset = Driver::OFFSET_DEFAULT, $limit = Driver::RETURNED_ROW_DEFAULT)
     {
@@ -268,7 +289,7 @@ class Query
      * Execute the delete query.
      * @param array $params
      * @return QueryResult
-     * @throws
+     * @throws DatabaseException|DatabaseConnectionException
      */
     public function delete(array $params = [])
     {
@@ -280,7 +301,7 @@ class Query
      * Executes an insert query.
      * @param array $params
      * @return QueryResult
-     * @throws
+     * @throws DatabaseException|DatabaseConnectionException
      */
     public function insert(array $params = [])
     {
@@ -298,5 +319,18 @@ class Query
     {
         $this->queryData[$this->querySet][self::QUERY_SET_DUPLICATE_KEY] = $params;
         return $this;
+    }
+
+    /**
+     * Executes an update query.
+     * @param array $params
+     * @return QueryResult
+     * @throws DatabaseException|DatabaseConnectionException
+     */
+    public function update(array $params = [])
+    {
+        $this->queryData[$this->querySet][self::QUERY_SET_DATA][] = $params;
+        $command = $this->builder->updateQuery($this);
+        return $this->driver->exec($command, $command->getParams());
     }
 }

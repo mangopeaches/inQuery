@@ -62,6 +62,32 @@ class MySqlHelper
     }
 
     /**
+     * Parses query elements for update queries into usable data.
+     * @param Query $query
+     * @return array
+     */
+    public static function parseUpdateQueryElements(Query $query)
+    {
+        $data = [
+            'columns' => [],
+            'joins' => [],
+            'where' => [],
+            'tables' => [],
+            'params' => [],
+            'sets' => []
+        ];
+        foreach ($query->getQueryData() as $index => $tableData) {
+            $data['tables'][$index] = $tableData[Query::QUERY_SET_TABLE];
+            self::buildWhere($data['tables'][$index], $tableData[Query::QUERY_SET_WHERE], $data['where'], $data['params']);
+            self::buildSet($data['tables'][$index], $tableData[Query::QUERY_SET_SET], $data['sets'], $data['params']);
+            if (!empty($tableData[Query::QUERY_SET_JOIN])) {
+                self::buildJoin($data['tables'][$index], $tableData[Query::QUERY_SET_JOIN], $data['joins']);
+            }
+        }
+        return $data;
+    }
+
+    /**
      * Parses Query elements for insert queries into usable data.
      * @param Query $query
      * @return array
@@ -92,23 +118,61 @@ class MySqlHelper
      * @param array &$duplicateKey
      * @return void
      */
-    public static function buildDuplicateKeyUpdate(array $duplicateKeyData, array &$duplidateKey)
+    public static function buildDuplicateKeyUpdate(array $duplicateKeyData, array &$duplicateKey)
     {
-        // get just the array rows, if we're working with an array of arrays
-        $duplicateKeyData = is_array($rowData[0][0]) ? $rowData[0] : $rowData;
-        foreach ($duplicateKeyData as $index => $dupe) {
-            foreach ($dupe as $columnName => $duplicateValue) {
-                // convert retain and update to correct values
-                // otherways we're passing the value through verbatim
-                switch ($duplicateValue) {
-                    case Query::DUPLICATE_KEY_RETAIN:
-                        $duplicateValue = '';
-                        break;
-                    case Query::DUPLICATE_KEY_UPDATE:
-                        $duplicateValue = '';
-                        break;
+        foreach ($duplicateKeyData as $columnName => $duplicateValue) {
+            // if it's an array then we're doing a complex operation and need to parse it
+            // otherwise, we have two options:
+            // update with the new value
+            // or just pass through the value provided as-is
+            // TODO: we probably need to wrap this in an escape sequence of sorts
+            if (is_array($duplicateValue)) {
+                $duplicateValue = self::buildDuplicateKeyComplexOperation($duplicateValue);
+            } else if ($duplicateValue === Query::DUPLICATE_KEY_UPDATE) {
+                $duplicateValue = "values(${columnName})";
+            }
+            $duplicateKey[] = "{$columnName} = {$duplicateValue}";
+        }
+    }
+
+    /**
+     * Helper function to parse and format a complex on duplicate key update condtion.
+     * @param string $columnName
+     * @param array $updateValues
+     * @return string
+     */
+    public static function buildDuplicateKeyComplexOperation($columnName, array $updateValues)
+    {
+        $condition = [
+            'c' => [
+                Query::OPERATION_ADD => [
+                    'a' => Query::DUPLICATE_KEY_UPDATE,
+                    'b' => Query::DUPLICATE_KEY_UPDATE
+                ]
+            ]
+        ];
+        /**
+         * 1. iterate the updateValues
+         * 2. iterate the values array for the operation key
+         * 3. if we encounter the value for the column is an array, that means we've encountered a nested operation
+         *  3.1 in this case we need to send the column name (key) and the current value array
+         * 4. if not an array, we check if it's a Query update condition or a hard coded value
+         * 5. then we need to retain the current operation and the values that are acting on the operation (we probably need to push these through as a reference param too)
+         * 6. once we have no more options, we need to iterate the array of ops => values and build the final string
+         */
+        // TODO: need to validate supplied operations are valid or throw an exception when we encounter an invalid one
+        foreach ($updateValues as $operation => $items) {
+            foreach ($items as $key => $updateValue) {
+                if (is_array($updateValue)) {
+                    // we need to recurse here
+
+                } else {
+                    if ($updateValue === Query::DUPLICATE_KEY_UPDATE) {
+
+                    } else {
+
+                    }
                 }
-                $duplicateKey[] = ['column' => $columnName, 'value' => $duplicateValue];
             }
         }
     }
@@ -175,6 +239,23 @@ class MySqlHelper
     }
 
     /**
+     * Helper function to build set conditions and associated params.
+     * @param string $tableName
+     * @param array $setConditions
+     * @param array &$sets
+     * @param array &$params
+     * @return void
+     */
+    public static function buildSet($tableName, array $setConditions, array &$sets, array &$params)
+    {
+        foreach ($setConditions as $currentSet) {
+            $setVals = MySqlHelper::buildSetCondition($tableName, ...$currentSet);
+            $sets[] = $setVals[0];
+            $params[$setVals[1]] = $currentSet[1];
+        }
+    }
+
+    /**
      * Helper function to build where conditions and associated params.
      * @param string $tableName
      * @param array $whereConditions
@@ -210,6 +291,36 @@ class MySqlHelper
     }
 
     /**
+     * Determines the parameter values for the field.
+     * @param string $table
+     * @param string $field
+     * @param mixed $value
+     * @return mixed
+     */
+    public static function determineParamName($table, $field, $value)
+    {
+        // if the string is already in the format :{string} it's already a placeholder, honor it
+        $paramName = $value;
+        if (!(is_string($value) && trim(substr($value, 0, 1)) === ':')) {
+            $paramName = self::buildHashParam($table.$field);
+        }
+        return $paramName;
+    }
+
+    /**
+     * Translates set parameters into appropriate set conditions.
+     * @param string $table
+     * @param string $columnName
+     * @param mixed $value
+     * @return array turle of [setString, paramName]
+     */
+    public static function buildSetCondition($table, $columnName, $value)
+    {
+        $paramName = self::determineParamName($table, $field, $value);
+        return ["set {$table}.{$field} = {$paramName}", $paramName];
+    }
+
+    /**
      * Translates where parameters into appropriate where clause.
      * @param string $table
      * @param string $field
@@ -219,11 +330,7 @@ class MySqlHelper
      */
     public static function buildWhereCondition($table, $field, $value, $condition = null)
     {
-        // if the string is already in the format :{string} it's already a placeholder, honor it
-        $paramName = $value;
-        if (!(is_string($value) && trim(substr($value, 0, 1)) === ':')) {
-            $paramName = self::buildHashParam($table.$field);
-        }
+        $paramName = self::determineParamName($table, $field, $value);
         $condition = $condition === null ? Query::EQ : $condition;
         switch ($condition) {
             case Query::IN:

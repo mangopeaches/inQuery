@@ -54,7 +54,23 @@ class MySqlQueryBuilder implements QueryBuilder
         $queryElements = MySqlHelper::parseInsertQueryElements($query);
         $stmt = 'insert into ' . $queryElements['tables'][0]
             . (!empty($queryElements['columns']) ? ' (' . implode(', ', $queryElements['columns']) . ')' : '')
-            . ' values ' . (!empty($queryElements['placeholders']) ? $queryElements['placeholders'] : '');
+            . ' values ' . (!empty($queryElements['placeholders']) ? $queryElements['placeholders'] : '')
+            . (!empty($queryElements['duplicateKey']) ? ' on duplicate key update ' . implode(' ', $queryElements['duplicateKey']) : '');
         return new MySqlCommand(Command::TYPE_INSERT, $stmt, $queryElements['data']);
+    }
+
+    /**
+     * Builds an update query command.
+     * @param Query $query
+     * @return Command
+     */
+    public function updateQuery(Query $query)
+    {
+        $queryElements = MySqlHelper::parseUpdateQueryElement($query);
+        $stmt = 'update ' . $queryElements['tables'][0]
+            . (!empty($queryElements['sets']) ? ' set ' . StringHelper::joinLines($queryElements['sets'], ' , ') : '')
+            . (!empty($queryElements['joins']) ? ' ' . StringHelper::joinLines($queryElements['joins']) : '')
+            . (!empty($queryElements['where']) ? ' where ' . StringHelper::joinLines($queryElements['where'], ' and ') : '');
+        return new MySqlCommand(Command::TYPE_UPDATE, $stmt, $queryElements['params']);
     }
 }

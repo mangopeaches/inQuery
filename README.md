@@ -213,6 +213,20 @@ In that example, your resulting rown would end up like:
 |   2   |   4   |   6   |   
 ```
 
+## Update Query
+
+The pattern for update queries is as such:
+* First instantiate a new query via `query()`
+* Specify the table from which you would like to update via `table('tableName')`
+* Specify the column names which you would like to update via the `set()` command
+* Specify the values you would like to set for the columns via the `values()` command
+* (optional) Specify tables to join via the `join()` command
+* (optional) Specify where conditions via the `where()` command
+* Execute the query via the `update()` command
+
+```php
+$driver->query()->table('user')->set('firstName', 'John')->where('lastName', 'Smith');
+```
 
 ## Full Sample
 
