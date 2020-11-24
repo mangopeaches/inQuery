@@ -2,6 +2,7 @@
 namespace InQuery\Drivers;
 
 use InQuery\Driver;
+use InQuery\{QueryResult};
 use InQuery\Drivers\BaseDriver;
 use InQuery\Exceptions\DatabaseConnectionException;
 use InQuery\Exceptions\DatabaseException;
@@ -20,11 +21,11 @@ class MongoDriver extends BaseDriver implements Driver
 
     /**
      * Establishes a connection to the database.
-     * @return bool
+     * @return void
      * @throws DependencyException
      * @throws DatabaseConnectionException
      */
-    public function connect()
+    public function connect(): void
     {
         // first need to check the client is installed
         if (!extendion_loaded('mongo')) {

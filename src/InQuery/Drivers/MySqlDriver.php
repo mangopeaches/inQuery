@@ -3,6 +3,7 @@ namespace InQuery\Drivers;
 
 use InQuery\Driver;
 use InQuery\Command;
+use InQuery\QueryResult;
 use InQuery\Drivers\BaseDriver;
 use InQuery\Queries\FindQuery;
 use InQuery\Helpers\MySqlHelper;
@@ -23,11 +24,11 @@ class MySqlDriver extends BaseDriver implements Driver
 
     /**
      * Establishes a connection to the database.
-     * @return bool
+     * @return void
      * @throws DependencyException
      * @throws DatabaseConnectionException
      */
-    public function connect()
+    public function connect(): void
     {
         // first need to check the client is installed
         if (!extension_loaded('mysqlnd')) {
@@ -54,8 +55,12 @@ class MySqlDriver extends BaseDriver implements Driver
      * @param int $limit
      * @return QueryResult
      */
-    public function exec(Command $command, array $params = [], $offset = self::OFFSET_DEFAULT, $limit = self::RETURNED_ROW_DEFAULT)
-    {
+    public function exec(
+        Command $command,
+        array $params = [],
+        int $offset = self::OFFSET_DEFAULT,
+        int $limit = self::RETURNED_ROW_DEFAULT
+    ): QueryResult {
         if ($this->connection === null) {
             $this->connect();
         }

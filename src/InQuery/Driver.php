@@ -1,10 +1,8 @@
 <?php
 namespace InQuery;
 
-use InQuery\QueryResult;
-use InQuery\Query;
+use InQuery\{QueryResult, Query, Command};
 use InQuery\Exceptions\DatabaseConnectionException;
-use InQuery\Command;
 
 /**
  * Interface which all database drivers must implement.
@@ -20,9 +18,10 @@ interface Driver
 
     /**
      * Establishes a connection to the database.
+     * @return void
      * @throws DatabaseConnectionException
      */
-    public function connect();
+    public function connect(): void;
 
     /**
      * Returns connection instance.
@@ -38,5 +37,10 @@ interface Driver
      * @param int $limit
      * @return QueryResult
      */
-    public function exec(Command $command, array $params = [], $offset = self::OFFSET_DEFAULT, $limit = self::RETURNED_ROW_DEFAULT);
+    public function exec(
+        Command $command,
+        array $params = [],
+        int $offset = self::OFFSET_DEFAULT,
+        int $limit = self::RETURNED_ROW_DEFAULT
+    ): QueryResult;
 }

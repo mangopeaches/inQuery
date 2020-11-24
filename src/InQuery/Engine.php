@@ -1,17 +1,10 @@
 <?php
 namespace InQuery;
 
-use InQuery\Driver;
-use InQuery\QueryBuilder;
-use InQuery\Query;
-use InQuery\Command;
-use InQuery\Drivers\MongoDriver;
-use InQuery\Drivers\MySqlDriver;
-use InQuery\Drivers\MockDriver;
-use InQuery\QueryBuilders\MongoQueryBuilder;
-use InQuery\QueryBuilders\MySqlQueryBuilder;
-use InQuery\QueryBuilders\MockQueryBuilder;
-use InQuery\Exceprionts\InvalidDriverException;
+use InQuery\{Driver, QueryBuilder, Query, QueryResult, Command};
+use InQuery\Drivers\{MongoDriver, MySqlDriver, MockDriver};
+use InQuery\QueryBuilders\{MongoQueryBuilder, MySqlQueryBuilder, MockQueryBuilder};
+use InQuery\Exceptions\InvalidDriverException;
 
 /**
  * Engine class that acts as a facade for drivers and query builders.
@@ -37,8 +30,15 @@ class Engine implements Driver
      * @return Engine
      * @throws InvalidDriverException
      */
-    public static function create($type, $host, $db, $port = 0, $username = '', $password = '', $charset = '')
-    {
+    public static function create(
+        string $type,
+        string $host,
+        string $db,
+        int $port = 0,
+        string $username = '',
+        string $password = '',
+        string $charset = ''
+    ): Engine {
         switch ($type) {
             case self::MYSQL:
                 return new self(new MySqlDriver($host, $db, $port, $username, $password, $charset), new MySqlQueryBuilder());
@@ -64,9 +64,10 @@ class Engine implements Driver
 
     /**
      * Establishes a connection to the database.
+     * @return void
      * @throws DatabaseConnectionException
      */
-    public function connect()
+    public function connect(): void
     {
         $this->driver->connect();
     }
@@ -84,7 +85,7 @@ class Engine implements Driver
      * Returns a new query.
      * @return Query
      */
-    public function query()
+    public function query(): Query
     {
         return new Query($this->driver, $this->builder);
     }
@@ -97,8 +98,12 @@ class Engine implements Driver
      * @param int $limit
      * @return QueryResult
      */
-    public function exec(Command $command, array $params = [], $offset = self::OFFSET_DEFAULT, $limit = self::RETURNED_ROW_DEFAULT)
-    {
+    public function exec(
+        Command $command,
+        array $params = [],
+        int $offset = self::OFFSET_DEFAULT,
+        int $limit = self::RETURNED_ROW_DEFAULT
+    ): QueryResult {
         return $this->driver->exec($command, $params, $offset, $limit);
     }
 }

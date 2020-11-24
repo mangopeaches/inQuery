@@ -1,9 +1,7 @@
 <?php
 namespace InQuery;
 
-use InQuery\Exceptions\InvalidParamsException;
-use InQuery\Exceptions\SetupException;
-use InQuery\Exceptions\InvalidConnectionException;
+use InQuery\Exceptions\{InvalidParamsException, SetupException, InvalidConnectionException};
 use InQuery\Engine;
 
 /**
@@ -62,10 +60,11 @@ final class InQuery
     /**
      * Initialization function to setup the app.
      * @param array $params
+     * @return InQuery
      * @throws InvalidParamsException
      * @throws InvalidDriverException
      */
-    public static function init(array $params)
+    public static function init(array $params): InQuery
     {
         if (self::$instance === null) {
             self::$instance = new self($params);
@@ -75,10 +74,11 @@ final class InQuery
 
     /**
      * Returns current instance.
+     * @return InQuery
      * @throws SetupException
      * @return InQuery
      */
-    public static function getInstance()
+    public static function getInstance(): InQuery
     {
         if (self::$instance === null) {
             throw new SetupException('You have not initialized InQuery.', SetupException::GET_INSTANCE_ERROR);
@@ -90,7 +90,7 @@ final class InQuery
      * Returns instance of the connection.
      * @return Engine
      */
-    public function getConnection()
+    public function getConnection(): Engine
     {
         // return the default if one is set, otherwise default to first in the set    
         foreach ($this->conns as $conn) {
@@ -107,7 +107,7 @@ final class InQuery
      * @return Engine
      * @throws InvalidConnectionException when name not found
      */
-    public function __get($name)
+    public function __get($name): Engine
     {
         foreach ($this->conns as $conn) {
             if ($conn['name'] == $name) {
